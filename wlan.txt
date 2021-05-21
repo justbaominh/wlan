@@ -172,4 +172,3 @@ SSID 15 : iBall-Baton
          Channel            : 6 
          Basic rates (Mbps) : 1 2 5.5 11
          Other rates (Mbps) : 6 9 12 18 24 36 48 54
-

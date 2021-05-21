@@ -6,23 +6,23 @@
 const int bufferLength = 255;
 
 int main() {
-    system(CMD);
+    // system(CMD);
     FILE* fp = fopen("wlan.txt", "r");
     // if (fp != NULL) {
     //     wlan_analyse(fp);
     //     fclose(fp);
     // }
         // printf("Error: wlan.txt file doesn't exist!\n");
-    int a = wlan_count(fp);
+    int a = wlanCount(fp);
     printf("Found %d WLANs\n", a);
-    wlan_analyse(fp);
+    wlanAnalyse(fp);
 /* Get the line number of text file*/
 
     fclose(fp);
     return 0;
 }
 
-int wlan_count(FILE* fp) {
+int wlanCount(FILE* fp) {
     char *token;
     char buffer[bufferLength];
     int countValue;
@@ -38,44 +38,72 @@ int wlan_count(FILE* fp) {
     return countValue;
 }
 
-int what_line(char* buffer) {
-        if (strstr(buffer, "SSID") != NULL) {
-            return 1;
-        }
-        if (strstr(buffer, "BSSID") != NULL) {
-            return 2;
-        }
-
-        if (strstr(buffer, "Signal") != NULL) {
-            return 3;
-        }
-
-        if (strstr(buffer, "Channel") != NULL) {
-            return 4;
-        }
+LINE_TYPE whatLine(char* buffer) {
+    if (strstr(buffer, "BSSID") != NULL) {
+        return BSSID;
+    }
+    if (strstr(buffer, "SSID") != NULL) {
+        return SSID;
+    }
+    if (strstr(buffer, "Signal") != NULL) {
+        return SIG;
+    }
+    if (strstr(buffer, "Channel") != NULL) {
+        return CH;
+    }
+    return UNKNOWN;
 }
 
-void wlan_analyse(FILE *fp) {
+void wlanAnalyse(FILE *fp) {
     int linesCount = 1;
     char c;
     while((c=fgetc(fp))!=EOF) {
         if(c=='\n')
         linesCount++;
     }
+    rewind(fp);
     printf("Numbers of lines in text file: %d\n", linesCount);
-    struct ssid *ssidList = (struct ssid *)malloc(sizeof(struct ssid) * wlan_count(fp));
+
+    ssid *ssidList = (ssid *)malloc(sizeof(ssid) * wlanCount(fp));
+    
     char buffer[bufferLength];
-    for (int i=3; i < linesCount; i++) {
+    int ssidCounter=0;
+    int bssidCounter=0;
+    for (int i=0; i < linesCount; i++) {
         fgets(buffer, bufferLength, fp);
-        if (what_line(buffer) == 1) {
-            printf("%s\n",read_value(buffer));
+        switch (whatLine(buffer))
+        {
+        case SSID:
+            bssidCounter = 0;
+            strcpy(ssidList[ssidCounter].ssid, readValue(buffer));
+            printf("ESSID: %s\n", ssidList[ssidCounter].ssid);
+            ssidCounter++;
+            break;
+        case BSSID: 
+            strcpy(ssidList[ssidCounter].aplist[bssidCounter].apmac, readValue(buffer));
+            strtok(ssidList[ssidCounter].aplist[bssidCounter].apmac, "\n");
+            printf("\tAP %d MAC: %s  ", bssidCounter+1,ssidList[ssidCounter].aplist[bssidCounter].apmac);
+            bssidCounter++;
+            break;
+        case SIG:
+            strcpy(ssidList[ssidCounter].aplist[bssidCounter].signalStrength, readValue(buffer));
+            strtok(ssidList[ssidCounter].aplist[bssidCounter].signalStrength, "\n");
+            printf("Signal: %s  ",ssidList[ssidCounter].aplist[bssidCounter].signalStrength);
+            break;
+        case CH:
+            strcpy(ssidList[ssidCounter].aplist[bssidCounter].channel, readValue(buffer));
+            printf("Channel: %s\n",ssidList[ssidCounter].aplist[bssidCounter].channel, readValue(buffer));
+            break;
+        default:
+            break;
         }
-        
     }
 }
-char* read_value(char* buffer) {
+
+char* readValue(char* buffer) {
     char *arg = strchr(buffer, ':');
     if (arg != NULL)
         arg++;
     return arg;
 }
+
