@@ -6,18 +6,14 @@
 const int bufferLength = 255;
 
 int main() {
-    // system(CMD);
+    system(CMD);
     FILE* fp = fopen("wlan.txt", "r");
-    // if (fp != NULL) {
-    //     wlan_analyse(fp);
-    //     fclose(fp);
-    // }
-        // printf("Error: wlan.txt file doesn't exist!\n");
-    int a = wlanCount(fp);
-    printf("Found %d WLANs\n", a);
-    wlanAnalyse(fp);
-/* Get the line number of text file*/
-
+    if (fp != NULL) {
+        wlanAnalyse(fp);
+        fclose(fp);
+    }
+    else
+        printf("Error: wlan.txt file doesn't exist!\n");
     fclose(fp);
     return 0;
 }
@@ -55,6 +51,8 @@ LINE_TYPE whatLine(char* buffer) {
 }
 
 void wlanAnalyse(FILE *fp) {
+    int a = wlanCount(fp);
+    printf("Found %d WLANs\n", a);
     int linesCount = 1;
     char c;
     while((c=fgetc(fp))!=EOF) {
@@ -62,9 +60,8 @@ void wlanAnalyse(FILE *fp) {
         linesCount++;
     }
     rewind(fp);
-    printf("Numbers of lines in text file: %d\n", linesCount);
 
-    ssid *ssidList = (ssid *)malloc(sizeof(ssid) * wlanCount(fp));
+    ssid *ssidList = (ssid *)malloc(sizeof(ssid) * a);
     
     char buffer[bufferLength];
     int ssidCounter=0;
@@ -98,6 +95,7 @@ void wlanAnalyse(FILE *fp) {
             break;
         }
     }
+    free(ssidList);
 }
 
 char* readValue(char* buffer) {
